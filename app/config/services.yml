@@ -1,0 +1,446 @@
+# Learn more about services, parameters and containers at
+# http://symfony.com/doc/current/book/service_container.html
+parameters:
+#    parameter_name: value
+  a2lix_i18n_doctrine.listener.controller.class: AppBundle\Component\Locale\ControllerListener
+  blackbox.form.type.class: AppBundle\Component\Form\FormType
+  blackbox.form.type.extension.class: AppBundle\Component\Form\FormExtension
+  blackbox.form.type.tab.class: AppBundle\Component\Form\TabType
+
+services:
+#    service_name:
+#        class: AppBundle\Directory\ClassName
+#        arguments: ["@another_service_name", "plain_value", "%parameter_name%"]
+  memcache:
+      class: Memcache
+      calls:
+          - [ addServer, [ "%memcache_server_host%", "%memcache_server_port%" ]]
+
+  doctrine.cache.memcache:
+      class: Doctrine\Common\Cache\MemcacheCache
+      calls:
+          - [setMemcache, [ "@memcache" ]]
+
+  property_accessor:
+      class: Symfony\Component\PropertyAccess\PropertyAccessor
+      arguments: [true, false, "@cache.property_access"]
+
+  app.locale_listener:
+      class: AppBundle\Component\Locale\LocaleListener
+      arguments: ['%kernel.default_locale%', "@a2lix_translation_form.default.service.parameter_locale_provider"]
+      tags:
+          - { name: kernel.event_subscriber }
+
+  app.locale_provider:
+      class: AppBundle\Component\Locale\LocaleProvider
+      arguments: ['%a2lix_translation_form.locales%', '%a2lix_translation_form.default_locale%', '%a2lix_translation_form.required_locales%', "@request_stack"]
+
+  app.breadcrumb_category:
+      class: AppBundle\Component\Breadcrumb\BreadcrumbCategoryService
+      arguments: ['@router', "@=service('doctrine').getRepository('AppBundle:Category\\\\Category')", '@templating', '@request_stack', 'Category']
+
+  blackbox.category.list.breadcrumbs.listener:
+      class: AppBundle\Component\Breadcrumb\CategoryListBreadcrumbListener
+      arguments: [ '@app.breadcrumb_category', 'Category' ]
+      tags:
+          - { name: 'kernel.event_listener', event: 'easy_admin.post_list', method: 'loadBreadcrumbs' }
+          - { name: 'kernel.event_listener', event: 'easy_admin.post_search', method: 'loadBreadcrumbs' }
+
+  app.breadcrumb_vendorcategory:
+      class: AppBundle\Component\Breadcrumb\BreadcrumbCategoryService
+      arguments: ['@router', "@=service('doctrine').getRepository('AppBundle:Category\\\\Vendor\\\\VendorCategory\\\\VendorCategory')", '@templating', '@request_stack', 'VendorCategory']
+
+  blackbox.vendorcategory.list.breadcrumbs.listener:
+      class: AppBundle\Component\Breadcrumb\CategoryListBreadcrumbListener
+      arguments: [ '@app.breadcrumb_vendorcategory', 'VendorCategory' ]
+      tags:
+          - { name: 'kernel.event_listener', event: 'easy_admin.post_list', method: 'loadBreadcrumbs' }
+          - { name: 'kernel.event_listener', event: 'easy_admin.post_search', method: 'loadBreadcrumbs' }
+
+  blackbox.form.type:
+      class: '%blackbox.form.type.class%'
+      arguments: [ "@easyadmin.config.manager", '@doctrine.orm.entity_manager', '@service_container', {}]
+      tags:
+            - { name: form.type, alias: easyadmin }
+
+  blackbox.form.type.tab:
+      class: '%blackbox.form.type.tab.class%'
+      tags:
+          - { name: form.type, alias: form_tab }
+
+  blackbox.form.type.extension:
+      class: '%blackbox.form.type.extension.class%'
+      arguments: [ "@request_stack" ]
+      tags:
+          - { name: form.type_extension, extended_type: '%blackbox.form.type.class%', alias: "easyadmin" }
+
+  easyadmin.twig.extension:
+      class: AppBundle\Twig\EasyAdminTwigExtension
+      arguments: [ '@easyadmin.config.manager', '@property_accessor', '%kernel.debug%' ]
+      tags:
+          - { name: 'twig.extension' }
+
+  blackbox.shop.select:
+      class: AppBundle\Model\Shop\ShopSelectService
+      arguments: [ '@doctrine.orm.entity_manager', '@session' ]
+
+  blackbox.summarization.shop:
+      class: AppBundle\Model\Shop\Summarization\ShopSummarizationService
+      arguments: [ '@doctrine.orm.entity_manager', '@service_container' ]
+
+  blackbox.summarization.manufacturer:
+      class: AppBundle\Model\Manufacturer\Summarization\ManufacturerSummarizationService
+      arguments: [ '@doctrine.orm.entity_manager', '@service_container' ]
+
+  blackbox.summarization.category:
+      class: AppBundle\Model\Category\Summarization\CategorySummarizationService
+      arguments: [ '@doctrine.orm.entity_manager', '@service_container' ]
+
+  blackbox.summarization.category_deep:
+      class: AppBundle\Model\Category\Summarization\CategoryDeepSummarizationService
+      arguments: [ '@doctrine.orm.entity_manager', '@service_container' ]
+
+  blackbox.summarization.productType:
+      class: AppBundle\Model\Product\ProductType\Summarization\ProductTypeSummarizationService
+      arguments: [ '@doctrine.orm.entity_manager', '@service_container' ]
+
+  blackbox.summarizationutils:
+      class: AppBundle\Component\Summarization\SummarizationUtils
+      arguments: [ '@service_container' ]
+
+  blackbox.form.type.reverserebate:
+      class: AppBundle\Form\Type\ReverseRebateForVendorType
+      arguments: ["@=service('doctrine').getRepository('AppBundle:Vendor\\\\ReverseRebate')", "@=service('doctrine').getRepository('AppBundle:Vendor\\\\ReverseRebateHistory')", '@request_stack', '@router']
+      tags:
+          - { name: form.type }
+
+  blackbox.form.type.productmaskbuttonstype:
+      class: AppBundle\Form\Type\ProductMaskButtonsType
+      arguments: ["@=service('doctrine').getRepository('AppBundle:Parameter\\\\Parameter')", '@request_stack', '@router']
+      tags:
+          - { name: form.type }
+
+  blackbox.form.type.contentcategory:
+      class: AppBundle\Form\Type\ContentCategoryType
+      arguments: ['@doctrine.orm.entity_manager', "@=service('doctrine').getRepository('AppBundle:Category\\\\Category')", '@request_stack', '@service_container', '@app.breadcrumb_category']
+      tags:
+          - { name: form.type }
+
+  blackbox.form.type.formproductname:
+      class: AppBundle\Component\Form\FormProductNameType
+      arguments: ['@doctrine.orm.entity_manager', '@request_stack']
+      tags:
+          - { name: form.type }
+
+  blackbox.form.type.productmanuallypricetype:
+      class: AppBundle\Form\Type\ProductManuallyPriceType
+      arguments: ['@doctrine.orm.entity_manager', '@request_stack']
+      tags:
+          - { name: form.type }
+
+  blackbox.form.type.formproductshortdescription:
+      class: AppBundle\Component\Form\FormProductShortDescriptionType
+      arguments: ['@doctrine.orm.entity_manager', '@request_stack']
+      tags:
+          - { name: form.type }
+
+  blackbox.form.type.formproductdescription:
+      class: AppBundle\Component\Form\FormProductDescriptionType
+      arguments: ['@doctrine.orm.entity_manager', '@request_stack']
+      tags:
+          - { name: form.type }
+
+  blackbox.form.type.vendorparameter:
+      class: AppBundle\Form\Type\VendorParameterType
+      arguments: ["@=service('doctrine').getRepository('AppBundle:Parameter\\\\Parameter')", "@=service('doctrine').getRepository('AppBundle:Vendor\\\\VendorParameter')", "@request_stack", '@router']
+      tags:
+          - { name: form.type }
+
+  blackbox.form.type.itemproducturl:
+    class: AppBundle\Form\Type\ItemProductUrlType
+    arguments: ["@=service('doctrine').getRepository('AppBundle:Product\\\\Item\\\\Item')", "@request_stack", "@router"]
+    tags:
+          - { name: form.type }
+
+  blackbox.form.type.itemmasterurl:
+    class: AppBundle\Form\Type\ItemMasterUrlType
+    arguments: ["@=service('doctrine').getRepository('AppBundle:Product\\\\Item\\\\Item')", "@request_stack", "@router"]
+    tags:
+          - { name: form.type }
+
+  blackbox.form.type.itemvariantcount:
+    class: AppBundle\Form\Type\ItemVariantCountType
+    arguments: ["@=service('doctrine').getRepository('AppBundle:Product\\\\Item\\\\Item')", "@request_stack", "@router"]
+    tags:
+          - { name: form.type }
+
+  easyadmin.query_builder:
+      class: AppBundle\Component\Search\QueryBuilder
+      arguments: [ '@doctrine' ]
+
+  easyadmin.finder:
+      class: AppBundle\Component\Search\Finder
+      arguments: [ '@easyadmin.query_builder', '@easyadmin.paginator', '@service_container', '@request_stack' ]
+
+  blackbox.form.type.producttypecategory:
+      class: AppBundle\Form\Type\ProductTypeCategoryType
+      arguments: ['@doctrine.orm.entity_manager', "@=service('doctrine').getRepository('AppBundle:Product\\\\ProductType\\\\ProductTypeCategory')", "@=service('doctrine').getRepository('AppBundle:Product\\\\ProductType\\\\ProductTypeParameter')", "@=service('doctrine').getRepository('AppBundle:Category\\\\Category')", '@request_stack', '@blackbox.shop.select', '@app.breadcrumb_category']
+      tags:
+          - { name: form.type }
+
+  blackbox.form.type.producttypeparameter:
+      class: AppBundle\Form\Type\ProductTypeParameterType
+      arguments: ['@doctrine.orm.entity_manager', '@router', "@request_stack"]
+      tags:
+          - { name: form.type }
+
+  blackbox.form.type.parametervalueslist:
+      class: AppBundle\Form\Type\ParameterValuesListType
+      arguments: ["@=service('doctrine').getRepository('AppBundle:Parameter\\\\ParameterValue')", "@request_stack"]
+      tags:
+          - { name: form.type }
+
+
+  blackbox.form.type.pricecalculationview:
+      class: AppBundle\Form\Type\PriceCalculationViewType
+      arguments: ["@doctrine.orm.entity_manager", "@request_stack"]
+      tags:
+          - { name: form.type }
+
+  blackbox.form.type.parametervendorslist:
+      class: AppBundle\Form\Type\ParameterVendorListType
+      arguments: ["@=service('doctrine').getRepository('AppBundle:Vendor\\\\VendorParameter')", "@request_stack"]
+      tags:
+          - { name: form.type }
+
+  blackbox.form.type.parametervendorvalueslist:
+      class: AppBundle\Form\Type\ParameterVendorValuesListType
+      arguments: ["@=service('doctrine').getRepository('AppBundle:Vendor\\\\VendorParameterValue')", "@request_stack"]
+      tags:
+          - { name: form.type }
+
+  blackbox.dataminer.curl:
+      class: AppBundle\Component\Import\Data\CurlDataMiner
+      arguments: [ "%dataminer_curl%", "%import_path%" ]
+
+  blackbox.dataminer.mercateo:
+      class: AppBundle\Component\Import\Data\MercateoDataMiner
+      arguments: [ { em: "@doctrine.orm.entity_manager", container: '@service_container' }, "%import_path%" ]
+
+  blackbox.dataminer.soap:
+      class: AppBundle\Component\Import\Data\SoapDataMiner
+      arguments: [ "%dataminer_curl%", "%import_path%" ]
+
+  blackbox.dataminer.local:
+      class: AppBundle\Component\Import\Data\LocalDataMiner
+      arguments: [ "%dataminer_curl%", "%import_path%" ]
+
+  blackbox.dataminer.esyco:
+      class: AppBundle\Component\Import\Data\EsycoDataMiner
+      arguments: [ { em: "@doctrine.orm.entity_manager", container: '@service_container' }, "%import_path%" ]
+
+  vendor.esyco.config:
+      class: AppBundle\Component\Esyco\EsycoConfig
+      arguments: [ '@service_container' ]
+
+  blackbox.autocomplete.filter.factory:
+      class: AppBundle\Component\AutocompleteFilter\AutocompleteFilterFactory
+      arguments: [ '@doctrine.orm.entity_manager', '@request_stack' ]
+
+  blackbox.datacopier.factory:
+      class: AppBundle\Component\DataCopier\DataCopierFactory
+      arguments: [ '@doctrine.orm.entity_manager' ]
+
+  blackbox.autocomplete.filter.listener:
+      class: AppBundle\Component\AutocompleteFilter\AutocompleteFilterListener
+      arguments: [ '@blackbox.autocomplete.filter.factory' ]
+      tags:
+          - { name: 'kernel.event_listener', event: 'easy_admin.post_search_query_builder', method: 'filter' }
+
+  app.facadefactory:
+      class: AppBundle\Component\Facade\FacadeFactory
+      arguments: ['@doctrine.orm.entity_manager', '@service_container']
+
+  gedmo.listener.loggable:
+#      class: Gedmo\Loggable\LoggableListener
+      class: AppBundle\Component\History\PriceHistoryListener
+      arguments: ['@doctrine.orm.entity_manager']
+      tags:
+          - { name: doctrine.event_subscriber, connection: default }
+
+  blackbox.listener.doctrinennflushlistener:
+      class: AppBundle\Component\Doctrine\EventListener\DoctrineOnFlushListener
+      tags:
+          - { name: doctrine.event_subscriber, connection: default }
+      autowire: true
+
+  blackbox.file.yamlloader:
+      class: AppBundle\Component\File\YamlLoader
+
+  blackbox.assigned_generator:
+      class: Doctrine\ORM\Id\AssignedGenerator
+      public: false
+
+  blackbox.data_copier.doctrine_load_class_meta_data_listener:
+      class: AppBundle\Component\DataCopier\DoctrineLoadClassMetadataListener
+      arguments: [ '%doctrine_load_class_meta_data_listener%', '@blackbox.assigned_generator' ]
+      tags:
+          - { name: 'doctrine.event_listener', event: 'loadClassMetadata', method: 'loadClassMetadata' }
+
+  blackbox.form.type.itempricehistory:
+      class: AppBundle\Form\Type\ItemPriceHistoryType
+      arguments: ['@doctrine.orm.entity_manager', "@request_stack"]
+      tags:
+          - { name: form.type }
+
+  blackbox.serializer.factory:
+      class: AppBundle\Component\Serializer\SerializerFactory
+      arguments: [ '@doctrine.orm.entity_manager' ]
+
+  monolog.default.lineformatter:
+      class: Monolog\Formatter\LineFormatter
+      arguments: [~, ~, true]
+
+  blackbox.item_repository:
+        class: AppBundle\Model\Product\Item\ItemRepository
+        arguments: [ '@doctrine.orm.entity_manager' ]
+
+  blackbox.item_picture_repository:
+        class: AppBundle\Model\Product\Item\ItemPictureRepository
+        arguments: [ '@doctrine.orm.entity_manager' ]
+
+  blackbox.product_repository:
+        class: AppBundle\Model\Product\ProductRepository
+        arguments: [ '@doctrine.orm.entity_manager' ]
+
+  blackbox.item_picture_pairing_handler:
+        class: AppBundle\Component\ItemPairing\ItemPicturePairingHandler
+        autowire: true
+
+  blackbox.product_price_handler:
+        class: AppBundle\Component\ItemPairing\ProductPriceHandler
+        autowire: true
+
+  blackbox.item_pairing_handler:
+        class: AppBundle\Component\ItemPairing\ItemPairingHandler
+        autowire: true
+
+  blackbox.product_vendor_handler:
+        class: AppBundle\Component\ItemPairing\ProductVendorHandler
+        autowire: true
+
+  blackbox.product_parameter_values_handler:
+          class: AppBundle\Component\ItemPairing\ProductParameterValuesHandler
+          arguments:
+            - '@doctrine.orm.entity_manager'
+            - '@logger'
+            - '@blackbox.parameter_value_facade'
+            - '@blackbox.product_parameter_value_facade'
+            - "@=service('doctrine').getRepository('AppBundle:Product\\\\Item\\\\ItemVendorParameterValue')"
+            - "@=service('doctrine').getRepository('AppBundle:Product\\\\ProductParameterValue')"
+
+  blackbox.product_categories_handler:
+        class: AppBundle\Component\ItemPairing\ProductCategoriesHandler
+        arguments: [ '@doctrine.orm.entity_manager', '@logger', '@blackbox.product_facade', "@=service('doctrine').getRepository('AppBundle:Product\\\\Product')", '@service_container' ]
+
+  blackbox.item_product_handler:
+        class: AppBundle\Component\ItemPairing\ItemProductHandler
+        arguments: [ '@service_container', '@doctrine.orm.entity_manager', '@logger' ]
+
+  blackbox.item_picture_facade:
+        class: AppBundle\Model\Product\Item\ItemPictureFacade
+        arguments: [ '@doctrine.orm.entity_manager', "@=service('doctrine').getRepository('AppBundle:Product\\\\Item\\\\ItemPicture')", '@service_container' ]
+
+  blackbox.product_facade:
+        class: AppBundle\Model\Product\ProductFacade
+        arguments: [ '@doctrine.orm.entity_manager', "@=service('doctrine').getRepository('AppBundle:Product\\\\Product')", '@service_container' ]
+
+  blackbox.product_picture_facade:
+        class: AppBundle\Model\Product\ProductPictureFacade
+        arguments: [ '@doctrine.orm.entity_manager', "@=service('doctrine').getRepository('AppBundle:Product\\\\ProductPicture')", '@service_container' ]
+
+  blackbox.list.listener:
+      class: AppBundle\Component\AdminList\AdminListListener
+      arguments: [ '@doctrine.orm.entity_manager', '@service_container', '@easyadmin.config.manager' ]
+      tags:
+          - { name: 'kernel.event_listener', event: 'easy_admin.post_list', method: 'postListAction' }
+          - { name: 'kernel.event_listener', event: 'easy_admin.post_search', method: 'postListAction' }
+          - { name: 'kernel.event_listener', event: 'easy_admin.pre_list', method: 'preListAction' }
+          - { name: 'kernel.event_listener', event: 'easy_admin.pre_search', method: 'preListAction' }
+
+  blackbox.vendorfeedlog.listfieldoptions:
+      class: AppBundle\Controller\VendorFeedLogController
+
+  form.type.transportlistchoice:
+      class: AppBundle\Form\Type\TransportListChoice
+      arguments: [ '@doctrine.orm.entity_manager', '@form.choice_list_factory' ]
+      tags:
+          - { name: form.type }
+
+  blackbox.product_price_facade:
+      class: AppBundle\Model\Product\ProductPriceFacade
+      arguments: [ '@doctrine.orm.entity_manager', "@=service('doctrine').getRepository('AppBundle:Product\\\\Item\\\\ItemPicture')", '@service_container' ]
+
+  blackbox.item_facade:
+      class: AppBundle\Model\Product\Item\ItemFacade
+      arguments: [ '@doctrine.orm.entity_manager', "@=service('doctrine').getRepository('AppBundle:Product\\\\Item\\\\ItemPicture')", '@service_container' ]
+
+  blackbox.run_time_tag_facade:
+        class: AppBundle\Model\RunTimeTag\RunTimeTagFacade
+        arguments: [ '@doctrine.orm.entity_manager', "@=service('doctrine').getRepository('AppBundle:RunTimeTag\\\\RunTimeTag')", '@service_container' ]
+
+  blackbox.item_stock_temporary_facade:
+        class: AppBundle\Model\Product\Item\Temporary\ItemStockTemporaryFacade
+        arguments: [ '@doctrine.orm.entity_manager', "@=service('doctrine').getRepository('AppBundle:Product\\\\Item\\\\Temporary\\\\ItemStockTemporary')", '@service_container' ]
+
+  blackbox.vendor_manufacturer_facade:
+        class: AppBundle\Model\Vendor\VendorManufacturerFacade
+        arguments: [ '@doctrine.orm.entity_manager', "@=service('doctrine').getRepository('AppBundle:Vendor\\\\VendorManufacturer')", '@service_container' ]
+
+  blackbox.item_vendor_parameter_data_facade:
+        class: AppBundle\Component\ItemVendorParameterData\ItemVendorParameterDataFacade
+        autowire: true
+
+  blackbox.one_off_command_facade:
+      class: AppBundle\Model\OneOff\OneOffCommandFacade
+      arguments: [ '@doctrine.orm.entity_manager', "@=service('doctrine').getRepository('AppBundle:OneOff\\\\OneOffCommand')" ]
+
+  blackbox.category_deep_products_counter:
+      class: AppBundle\Component\Category\CategoryDeepProductsCounter
+      arguments: [ '@doctrine.orm.entity_manager', "@=service('doctrine').getRepository('AppBundle:Category\\\\Category')", "@=service('doctrine').getRepository('AppBundle:Product\\\\Product')" ]
+
+  blackbox.item_vendor_parameter_value_facade:
+      class: AppBundle\Model\Product\Item\ItemVendorParameterValueFacade
+      arguments: [ '@doctrine.orm.entity_manager', "@=service('doctrine').getRepository('AppBundle:Product\\\\Item\\\\ItemVendorParameterValue')", '@service_container' ]
+
+  blackbox.vendor_variant_dimension_facade:
+      class: AppBundle\Model\Vendor\Variant\VendorVariantDimensionFacade
+      arguments: [ '@doctrine.orm.entity_manager', "@=service('doctrine').getRepository('AppBundle:Vendor\\\\Variant\\\\VendorVariantDimension')", '@service_container' ]
+
+  blackbox.item_variant_dimension_facade:
+      class: AppBundle\Model\Product\Item\Variant\ItemVariantDimensionFacade
+      arguments: [ '@doctrine.orm.entity_manager', "@=service('doctrine').getRepository('AppBundle:Product\\\\Item\\\\Variant\\\\ItemVariantDimension')", '@service_container' ]
+
+  blackbox.vendor_parameter_value_facade:
+      class: AppBundle\Model\Vendor\VendorParameterValueFacade
+      arguments: [ '@doctrine.orm.entity_manager', "@=service('doctrine').getRepository('AppBundle:Vendor\\\\VendorParameterValue')", '@service_container' ]
+
+  blackbox.item_vendor_variant_dimension_data_facade:
+      class: AppBundle\Model\Product\Item\Variant\ItemVendorVariantDimensionDataFacade
+      arguments: [ '@doctrine.orm.entity_manager', "@=service('doctrine').getRepository('AppBundle:Product\\\\Item\\\\Variant\\\\ItemVendorVariantDimensionData')", '@service_container' ]
+
+  blackbox.item_vendor_variant_data_facade:
+      class: AppBundle\Model\Product\Item\Variant\ItemVendorVariantDataFacade
+      arguments: [ '@doctrine.orm.entity_manager', "@=service('doctrine').getRepository('AppBundle:Product\\\\Item\\\\Variant\\\\ItemVendorVariantData')", '@service_container' ]
+
+  blackbox.currency.service:
+      class: AppBundle\Model\Product\Item\Price\CurrencyService
+      arguments: [ '@doctrine.orm.entity_manager', "@=service('doctrine').getRepository('AppBundle:Product\\\\Item\\\\Price\\\\Currency')", '@service_container' ]
+
+  blackbox.parameter_value_facade:
+      class: AppBundle\Model\Parameter\ParameterValueFacade
+      arguments: [ '@doctrine.orm.entity_manager', "@=service('doctrine').getRepository('AppBundle:Parameter\\\\ParameterValue')", '@service_container' ]
+
+  blackbox.product_parameter_value_facade:
+      class: AppBundle\Model\Product\ProductParameterValueFacade
+      arguments: [ '@doctrine.orm.entity_manager', "@=service('doctrine').getRepository('AppBundle:Product\\\\ProductParameterValue')", '@service_container' ]

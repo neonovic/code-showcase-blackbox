@@ -1,0 +1,41 @@
+{#
+
+    Spolecne funkce modalni popup okno
+
+#}
+{# sjednoceny kod pro modalni okna edit a new #}
+function modalEditOpen(title, content, innerFormSelector) {
+
+    $('#modal-edit .modal-title').html(title);
+    $('#modal-edit .modal-body').html(content);
+    {# povoluji zavrit na escape a osetruji jako jino zavreni #}
+    $('#modal-edit').modal({ backdrop: true, keyboard: true })
+        .on('hide.bs.modal', function(e) {
+            var element = $(document.activeElement);
+            if (element.data('dismiss') == 'modal') {
+                {# zavrit modal bez ulozeni (tlacitka Zrusit a X) #}
+                return true;
+            } else if (element.attr('id') == 'modal-edit') {
+                {# ulozit formular v iframe - esc a click mimo #}
+                var form = $('#modal-edit-frame').contents().find(innerFormSelector).first();
+                if (form.length) {
+                    {# odeslat formular, pak se zavre i modal #}
+                    form.trigger('submit');
+                    return false;
+                } else {
+                    {# vyvolano pred natazenim formulare, zavrit modal bez ulozeni #}
+                    return true;
+                }
+            }
+            return true;
+        });
+
+}
+
+{# obecna funkce pro zavreni konkretniho modalniho dialogu #}
+window.closeModal = function(){
+    {# zapomenout predchozi aktivni element #}
+    document.activeElement.blur();
+    $('#modal-edit').modal('hide');
+    {% block closeModalCallBack '' %}
+};

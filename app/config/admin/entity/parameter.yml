@@ -1,0 +1,41 @@
+easy_admin:
+    entities:
+        Parameter:
+            class: AppBundle\Model\Parameter\Parameter
+            controller: AppBundle\Controller\ParameterController
+            facade: AppBundle\Model\Parameter\ParameterValueFacade
+            list:
+                title: list.parameter
+                fields: [ 'id', 'title', 'unit', 'valueType' ]
+                actions:
+                    #- { name: 'show', icon: 'search', label: false }
+                    - { name: 'edit', icon: 'pencil', label: false }
+                    #- { name: 'editModal', icon: 'edit', label: false }
+                    - { name: 'delete', icon: 'close', label: false }
+            search:
+                fields:
+                    - id
+                    - { property: 'translations', target_field: 'title' }
+            form:
+                fields:
+                    - { type: 'form_tab', label: 'tab.settings', icon: 'gear' }
+                    - { type: 'group', label: 'Parameter', icon: 'tag' }
+                    - active
+                    - sortAscending
+                    - { property: 'translations', type: 'A2lix\TranslationFormBundle\Form\Type\TranslationsType' }
+                    - { property: 'valueType', type: 'choice', type_options: { choices: { text: 'text', number: 'number', interval: 'interval' } } }
+                    - { property: 'unit', type_options: { required: false } }
+                    - noApiTransfer
+                    - { type: 'group', css_class: 'information' }
+                    - { property: 'id', type_options: { disabled: true, required: false }, css_class: '', row_css_class: '', label_css_class: '', form_group_css_class: '', template: '@EasyAdmin/default/field_id.html.twig' }
+                    - { property: 'created', type_options: { disabled: true, required: false }, css_class: '', row_css_class: '', label_css_class: '', form_group_css_class: '', template: '@EasyAdmin/default/field_datetime.html.twig' }
+                    - { property: 'updated', type_options: { disabled: true, required: false }, css_class: '', row_css_class: '', form_group_css_class: 'col-sm-10 padding-like-control-label', template: '@EasyAdmin/default/field_datetime.html.twig' }
+                    - { type: 'form_tab', label: 'form.parameterValue', icon: 'list-alt' }
+                    - { type: 'group' }
+                    - { property: 'parameterValuesList', type: 'AppBundle\Form\Type\ParameterValuesListType', label: '--' }
+                    - { type: 'form_tab', label: 'form.parameterVendor', icon: 'ship' }
+                    - { type: 'group' }
+                    - { property: 'parameterVendorList', type: 'AppBundle\Form\Type\ParameterVendorListType', label: '--' }
+                    - { type: 'form_tab', label: 'form.parameterVendorValue', icon: 'exchange' }
+                    - { type: 'group' }
+                    - { property: 'parameterVendorValuesList', type: 'AppBundle\Form\Type\ParameterVendorValuesListType', label: '--' }

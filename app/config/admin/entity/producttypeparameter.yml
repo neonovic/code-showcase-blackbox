@@ -1,0 +1,25 @@
+easy_admin:
+    entities:
+        ProductTypeParameter:
+            class: AppBundle\Model\Product\ProductType\ProductTypeParameter
+            controller: AppBundle\Controller\ProductTypeParameterController
+            form:
+                fields:
+                    - { type: 'group', label: 'ProductTypeParameter', icon: 'tags' }
+                    - { property: 'productType', type: easyadmin_autocomplete, type_options: { disabled: true } }
+                    - { property: 'parameterGroup', type: easyadmin_autocomplete, type_options: { block_name: 'GroupFilter', attr: { autofocus: 'autofocus' } } }
+                    - { property: 'parameter', type: easyadmin_autocomplete, type_options: { block_name: 'ParameterFilter', attr: { autofocus: 'autofocus' } } }
+                    - required
+                    - filter
+                    - collapsed
+                    - displayNegativeValue
+                    - { property: 'copyParameterGroup', type: 'checkbox' }
+                    - { type: 'group', css_class: 'information' }
+                    - { property: 'id', type_options: { disabled: true, required: false }, css_class: '', row_css_class: '', label_css_class: '', form_group_css_class: '', template: '@EasyAdmin/default/field_id.html.twig' }
+                    - { property: 'created', type_options: { disabled: true, required: false }, css_class: '', row_css_class: '', label_css_class: '', form_group_css_class: '', template: '@EasyAdmin/default/field_datetime.html.twig' }
+            edit:
+                actions:
+                    - { name: 'delete', target: '_parent' }
+            new:
+                actions:
+                    - { name: 'list', target: '_parent', css_class: 'hide-in-popup btn btn-secondary' }

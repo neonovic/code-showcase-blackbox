@@ -1,0 +1,43 @@
+{% extends 'easy_admin/layout.html.twig' %}
+{#
+
+    obecne uzavreni modalniho dialogu s iframe
+    toto se objevi v onom iframe
+
+
+#}
+
+{%- block body_class parent() ~ ' modal-popup modal-popup-close' -%}
+
+{% block content_title "Close"|trans %}
+
+{% block wrapper %}
+<div class="content-wrapper">
+
+    {#
+
+        tady by mohl byt nejaky text
+
+    #}
+
+</div>
+{% endblock %}
+
+{% block body_javascript %}
+
+    <script type="text/javascript">
+        $(function() {
+            {# js volany pri uzavreni modalniho dialogu s iframe #}
+            {% include 'AppBundle::modalPopupCallback.js.twig' %}
+            try {
+                window.parent.closeModal();
+            } catch(err) {};
+        });
+    </script>
+
+    {{ parent() }}
+
+{% endblock %}
+
+
+

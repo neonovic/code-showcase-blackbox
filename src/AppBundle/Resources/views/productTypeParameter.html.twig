@@ -1,0 +1,22 @@
+{% spaceless %}
+    {# item neni block, je v promenne, prochazi se v cyklu #}
+    {% set item = item ?? [] %}
+    {# kvuli pouziti i v js blocky #}
+    {% set escapeHtmlForJs = escapeHtmlForJs ?? '' %}
+    <li class="list-group-item clearfix" data-id="{% block id item[0].id %}" data-type="group" data-add="{% block linkAdd (path('easyadmin', (form.vars.url_parameters_add_groupedparameter|merge({body: 'lock-parameter-group', group: ''})))|e ~ block('id'))|raw %}">
+        <div>
+            <i class="fa fa-ellipsis-v holder"></i>
+            <strong class="title">{% block title item[0].getParameterGroup().getTitle() %} <{{ escapeHtmlForJs }}/strong>
+            {{- ('(#' ~ block('id') ~ ')')|raw -}}
+        <{{ escapeHtmlForJs }}/div>
+        {% if item|length > 1 %}
+            <ul>
+                {% for parameter in item %}
+                    {% if parameter.getParameter() %}
+                        {% include 'AppBundle::productTypeParameterItem.html.twig' %}
+                    {% endif %}
+                {% endfor %}
+            <{{ escapeHtmlForJs }}/ul>
+        {% endif %}
+    <{{ escapeHtmlForJs }}/li>
+{% endspaceless %}

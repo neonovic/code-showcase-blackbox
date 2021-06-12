@@ -1,0 +1,58 @@
+easy_admin:
+    entities:
+        ProductType:
+            class: AppBundle\Model\Product\ProductType\ProductType
+            controller: AppBundle\Controller\ProductTypeController
+            facade: AppBundle\Model\Product\ProductType\ProductTypeFacade
+            list:
+                title: list.producttype
+                fields:
+                  - id
+                  - name
+                  - created
+                  - updated
+                  - active
+                  - { property: 'summarizationvalue', label: 'list.productType.summarization', sortable: true, sortableColumn: 'calculateValue', propertyUse: 'summarization' }
+                actions:
+                    - { name: 'edit', icon: 'pencil', label: false }
+                    - { name: 'delete', icon: 'close', label: false }
+            search:
+                fields:
+                    - id
+                    - name
+            form:
+                fields:
+                    - { type: 'form_tab', label: 'tab.settings', icon: 'gear' }
+                    - { type: 'group', label: 'ProductType', icon: 'motorcycle' }
+                    - { property: 'active', type_options: { attr: { tabindex: 1 } } }
+                    - { property: 'name', type_options: { attr: { tabindex: 2, maxlength: 255, autofocus: 'autofocus' } } }
+                    - property: 'productMaskButtons'
+                      type: 'AppBundle\Form\Type\ProductMaskButtonsType'
+                      css_class: 'productTitleMaskWildcards'
+                      target: '#producttype_productTitleMask'
+                      wildcards: { MODEL: 'producttype.model', PN: 'producttype.pn', EAN: 'producttype.ean', MANUFACTURER: 'producttype.manufacturer', PAR: 'parameters' }
+                    - { property: 'productTitleMask', type_options: { required: false, attr: { tabindex: 3, maxlength: 255 } } }
+                    - { property: 'shortDescription', type: 'textarea', type_options: { attr: { tabindex: 4, maxlength: 255 } } }
+                    - mercateo
+                    - { property: 'upstairsExtension', type: 'checkbox', type_options: { mapped: false } }
+                    - { property: 'ecoDestructExtension', type: 'checkbox', type_options: { mapped: false } }
+                    - { property: 'disabledDeliveryExtension', type: 'AppBundle\Form\Type\TransportListChoice', type_options: { mapped: false, multiple: true, expanded: true } }
+            edit:
+                fields:
+                    # pri slepovani formulare je treba zopakovat definici tabu a grupy
+                    - { type: 'form_tab', label: 'tab.settings', icon: 'gear' }
+                    - { type: 'group', label: 'ProductType', icon: 'motorcycle' }
+                    - { type: 'group', css_class: 'information' }
+                    - { property: 'id', type_options: { disabled: true, required: false }, css_class: '', row_css_class: '', label_css_class: '', form_group_css_class: '', template: '@EasyAdmin/default/field_id.html.twig' }
+                    - { property: 'created', type_options: { disabled: true, required: false }, css_class: '', row_css_class: '', label_css_class: '', form_group_css_class: '', template: '@EasyAdmin/default/field_datetime.html.twig' }
+                    - { property: 'updated', type_options: { disabled: true, required: false }, css_class: '', row_css_class: '', label_css_class: '', form_group_css_class: '', template: '@EasyAdmin/default/field_datetime.html.twig' }
+                    - { type: 'form_tab', label: 'Parameters', icon: 'tags' }
+                    - { type: 'group', label: 'Parameters', icon: 'tags' }
+                    - { property: 'parameters', label: '--', type: 'AppBundle\Form\Type\ProductTypeParameterType' }
+                    - { type: 'form_tab', label: 'Categories', icon: 'folder-open' }
+                    - { type: 'group', label: 'Categories', icon: 'folder-open-o' }
+                    - { property: 'categories', label: '--', type: 'AppBundle\Form\Type\ProductTypeCategoryType' }
+                    - { type: 'form_tab', label: 'Products', icon: 'cubes' }
+                    - { type: 'group' }
+#                    - products
+#                    - productsItem

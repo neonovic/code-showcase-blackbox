@@ -1,0 +1,32 @@
+{#
+- logika pro checkboxu dle zadani:
+    V popisu úkolu je popsáno, že checbox 'filter' má být dostupný jedině v případě aktivního checkboxu 'required'.
+    A pak následně 'collapsed' má být možné editovat jen v případě aktivního 'filter'.
+    Toto by šlo ošetřit v javascriptu, pokud se nepletu?
+- ajaxem se odesila jen nastaveni clicknuteho checkboxu, resetovani souvisejicich se deje paralelne a nezavisle na frontendu i backendu
+#}
+{% spaceless %}
+    {# kvuli pouziti i v js blocky #}
+    {% set escapeHtmlForJs = escapeHtmlForJs ?? '' %}
+    <li class="list-group-item clearfix" data-id="{% block id parameter.getId() %}" data-pid="{% block idParameter parameter.parameter.getId() %}" data-type="parameter">
+        <div>
+            <i class="fa fa-ellipsis-v holder"></i>
+            <strong class="title">
+                {%- block title parameter.getParameter().getTitle() -%}
+                {%- block unit parameter.getParameter().getUnit() ? ' (' ~ parameter.getParameter().getUnit() ~ ')' -%}
+            <{{ escapeHtmlForJs }}/strong>
+            {{- (' (#' ~ block('id') ~ '/' ~ block('idParameter') ~ ')')|raw -}}
+            {# checkboxy vypiseme v cyklu, v poli definujeme parametry pro html, podminku "odemceni" (valid) a souvisejici checkboxu selectorem (manage) #}
+            {% for item in [
+                { title: 'required', name: 'required', value: parameter.getRequired() ?? false, valid: true, manage: '.filter, .collapsed' },
+                { title: 'filter', name: 'filter', value: parameter.getFilter() ?? false, valid: parameter.getRequired() ?? false, manage: '.collapsed' },
+                { title: 'collapsed', name: 'collapsed', value: parameter.getCollapsed() ?? false, valid: (parameter.getFilter() ?? false and parameter.getRequired() ?? false), manage: '' },
+                { title: 'displayNegativeValue', name: 'displayNegativeValue', value: parameter.getDisplayNegativeValue() ?? false, valid: true, manage: '' }
+            ] -%}
+                <div class="checkbox checkbox-inline{{ item.valid ? '' : ' ' ~ itemDisabledClass }}">
+                    <label class="clickable"><input class="checkbox-parameter clickable {{ item.name }}" type="checkbox" data-parameter="{{ item.name }}" data-id="{{ block('id') }}" data-manage="{{ item.manage }}"{{ item.value and item.valid ? ' checked' }}{{ item.valid ? '' : ' disabled' }}> {{ item.title|trans }}<{{ escapeHtmlForJs }}/label>
+                <{{ escapeHtmlForJs }}/div>
+            {% endfor %}
+        <{{ escapeHtmlForJs }}/div>
+    <{{ escapeHtmlForJs }}/li>
+{% endspaceless %}

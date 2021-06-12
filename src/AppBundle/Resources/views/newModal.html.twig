@@ -1,0 +1,64 @@
+{% extends '@EasyAdmin/default/new.html.twig' %}
+
+{%- block body_class parent() ~ ' modal-popup ' ~ app.request.query.get('body', '') -%}
+
+{% block wrapper %}
+
+    <div class="content-wrapper">
+        {% block content %}
+            {{ block('flash_messages') }}
+
+            <section class="content-header">
+                {% block content_header %}
+                    <h1 class="title">{{ block ('content_title') }}</h1>
+                {% endblock content_header %}
+            </section>
+
+            <section id="main" class="content">
+                {{ block('main') }}
+            </section>
+        {% endblock content %}
+    </div>
+
+{% endblock %}
+
+
+{% block body_javascript %}
+    <script type="text/javascript">
+        $(function() {
+            {# zamknuti vyberu skupny pri pridavani parametru #}
+            var parameterGroupAutocompleteElement = $('.lock-parameter-group #producttypeparameter_parameterGroup_autocomplete');
+            if ( parameterGroupAutocompleteElement.length ) {
+                parameterGroupAutocompleteElement.attr('disabled', true);
+                $('<input type="hidden"\/>').val(parameterGroupAutocompleteElement.val()).attr('name', parameterGroupAutocompleteElement.attr('name')).appendTo(parameterGroupAutocompleteElement.parents('form'));
+            }
+
+            {# js volany po 'ulozit a novy' v modalnim dialogu s iframe #}
+            {% include 'AppBundle::modalPopupCallback.js.twig' %}
+
+            {# TODO: tady by delete vubec byt nemelo! opravit, az bude i zbytek spravne #}
+            $('#delete-form').attr('target', '_parent');
+            $(document).keyup(function(e) {
+                if (e.keyCode === 27) {
+                    $('form.edit-form').first().trigger('submit');
+                }
+            });
+        });
+    </script>
+    {{ parent() }}
+    {# focusne se prvni viditelny aktivni element s nastavenym autofocus. select2 autofocus ignoruje, musi se otevrit #}
+    <script type="text/javascript">
+        $(function() {
+            $('#main').find('form [autofocus]:not(:disabled):visible:first').each(function() {
+                if ($(this).is('.select2-hidden-accessible')) {
+                    if (!$(this).closest('.form-group').is('.has-error')) {
+                        var select = $(this);
+                        setTimeout(function(){select.select2('open')}, 333);
+                    }
+                } else {
+                    $(this).focus();
+                }
+            });
+        });
+    </script>
+{% endblock %}
